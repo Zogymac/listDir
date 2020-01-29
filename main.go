@@ -4,15 +4,17 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"os"
-	"strconv"
 	"math"
+	"os"
+	"sort"
+	"strconv"
 )
 
 var (
 	d = flag.String("d", ".", "Directory to process")
 	a = flag.Bool("a", false, "Print all info")
 	h = flag.Bool("h", false, "Print s")
+	date = flag.Bool("sort", false, "Sorted by date")
 )
 
 func hrSize(fsize int64) string {
@@ -42,6 +44,21 @@ func printAll(file os.FileInfo, flag bool) {
 	fmt.Printf("%s %s %s \n", fSize, time, file.Name())
 }
 
+type SortByDate []os.FileInfo
+
+
+func (ss SortByDate) Len() int {
+	return len(ss)
+}
+
+func (ss SortByDate) Swap(i int, j int) {
+	ss[i], ss[j] = ss[j], ss[i]
+}
+
+func (ss SortByDate) Less(i int, j int) bool {
+	return ss[i].ModTime().UnixNano() < ss[j].ModTime().UnixNano()
+}
+
 func main() {
 	flag.Parse()
 	files, _ := ioutil.ReadDir(*d)
@@ -55,6 +72,12 @@ func main() {
 			printAll(file, flag)
 		} else {
 			fmt.Println(file.Name())
+		}
+		if *date {
+			var sortBy sort.Interface
+			sortBy = SortByDate(files)
+			sort.Sort(sortBy)
+
 		}
 	}
 }
