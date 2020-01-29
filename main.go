@@ -14,7 +14,8 @@ var (
 	d = flag.String("d", ".", "Directory to process")
 	a = flag.Bool("a", false, "Print all info")
 	h = flag.Bool("h", false, "Print s")
-	date = flag.Bool("sort", false, "Sorted by date")
+	date = flag.Bool("sort_date", false, "Sorted by date")
+	size = flag.Bool("sort_size", false, "Sorted by size")
 )
 
 func hrSize(fsize int64) string {
@@ -59,6 +60,21 @@ func (ss SortByDate) Less(i int, j int) bool {
 	return ss[i].ModTime().UnixNano() < ss[j].ModTime().UnixNano()
 }
 
+type SortBySize []os.FileInfo
+
+
+func (ss SortBySize) Len() int {
+	return len(ss)
+}
+
+func (ss SortBySize) Swap(i int, j int) {
+	ss[i], ss[j] = ss[j], ss[i]
+}
+
+func (ss SortBySize) Less(i int, j int) bool {
+	return ss[i].Size() < ss[j].Size()
+}
+
 func main() {
 	flag.Parse()
 	files, _ := ioutil.ReadDir(*d)
@@ -77,7 +93,11 @@ func main() {
 			var sortBy sort.Interface
 			sortBy = SortByDate(files)
 			sort.Sort(sortBy)
-
+		}
+		if *size {
+			var sortBy sort.Interface
+			sortBy = SortBySize(files)
+			sort.Sort(sortBy)
 		}
 	}
 }
